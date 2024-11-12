@@ -38,6 +38,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
+                        loadDraftFromUserDefaults()
                         isShowingSheet = true
                     }) {
                         Text("Nova nota")
@@ -51,13 +52,17 @@ struct ContentView: View {
                         Text("Nova nota")
                     ) {
                         TextField("Título", text: $draft.title)
-                            .onChange(of: draft.title) {
+                            .onChange(of: draft.title) { _, newValue in
                                 saveDraftToUserDefaults()
                             }
                         TextField("Lembrar...", text: $draft.content, axis: .vertical)
-                            .onChange(of: draft.content) {
-                            saveDraftToUserDefaults()
-                        }
+//                            .onChange(of: draft.content) { oldValue, newValue in
+//                            saveDraftToUserDefaults()
+//                                print("=============")
+//                                print("oldValue: \(oldValue)")
+//                                print("newValue: \(newValue)")
+//                                print(draft.content)
+//                        }
                         HStack {
                             Spacer()
                             Button(action: {
