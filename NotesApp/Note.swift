@@ -8,16 +8,8 @@
 import Foundation
 import SwiftData
 
-protocol NoteProtocol {
-    var id: UUID { get set }
-    
-    var title: String { get set }
-    
-    var content: String { get set }
-}
-
 @Model
-class Note: NoteProtocol {
+class Note {
     
     public var id: UUID
     
@@ -35,20 +27,3 @@ class Note: NoteProtocol {
     }
 }
 
-class NoteDraft: NoteProtocol {
-    var id: UUID
-    
-    var title: String
-    
-    var content: String
-    
-    init(title: String = "", content: String = "") {
-        self.id = UUID()
-        self.title = title
-        self.content = content
-    }
-    
-    func isFilled() -> Bool {
-        return !(title.isEmpty || content.isEmpty)
-    }
-}

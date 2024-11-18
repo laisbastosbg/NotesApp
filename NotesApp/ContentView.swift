@@ -42,7 +42,6 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
-//                        draftManager.loadDraftFromFile()
                         isShowingSheet = true
                     }) {
                         Text("Nova nota")
@@ -89,17 +88,11 @@ class DraftManager {
     
     public static var shared = DraftManager()
     
-//    public var draft: NoteDraft
-    
     private var draftFilePath: URL {
         let fileManager = FileManager.default
         let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         return documentDirectory.appendingPathComponent("draft_note.json")
     }
-    
-//    private init() {
-//        self.draft = NoteDraft()
-//    }
     
     public func saveDraftToFile(title: String, content: String) {
         let draftData = ["title": title, "content": content]
@@ -109,21 +102,9 @@ class DraftManager {
         }
     }
     
-//    public func loadDraftFromFile() {
-//        guard let data = try? Data(contentsOf: draftFilePath),
-//              let draftData = try? JSONDecoder().decode([String: String].self, from: data) else {
-//            draft = NoteDraft()
-//            return
-//        }
-//        
-//        draft.title = draftData["title"] ?? ""
-//        draft.content = draftData["content"] ?? ""
-//    }
-    
     public func loadDraftTitle() -> String {
         guard let data = try? Data(contentsOf: draftFilePath),
               let draftData = try? JSONDecoder().decode([String: String].self, from: data) else {
-//            draft = NoteDraft()
             return ""
         }
         
@@ -133,7 +114,6 @@ class DraftManager {
     public func loadDraftContent() -> String {
         guard let data = try? Data(contentsOf: draftFilePath),
               let draftData = try? JSONDecoder().decode([String: String].self, from: data) else {
-//            draft = NoteDraft()
             return ""
         }
         
@@ -141,7 +121,6 @@ class DraftManager {
     }
     
     public func clearDraft() {
-//        draft = NoteDraft()
         try? FileManager.default.removeItem(at: draftFilePath)
     }
 }
