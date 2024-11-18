@@ -12,7 +12,11 @@ struct ContentView: View {
     
     @Environment(\.modelContext) private var context
     
-    @State var draft = NoteDraft()
+    @State var draftManager = DraftManager.shared
+    
+    @State var draftTitle: String = DraftManager.shared.loadDraftTitle()
+    
+    @State var draftContent: String = DraftManager.shared.loadDraftContent()
     
     @Query var notes: [Note]
     
@@ -38,7 +42,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
-                        loadDraftFromUserDefaults()
+//                        draftManager.loadDraftFromFile()
                         isShowingSheet = true
                     }) {
                         Text("Nova nota")
@@ -46,30 +50,28 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Notas salvas")
-            .sheet(isPresented: $isShowingSheet, onDismiss: { saveDraftToUserDefaults() }) {
+            .sheet(isPresented: $isShowingSheet, onDismiss: { draftManager.saveDraftToFile(title: draftTitle, content: draftContent) }) {
                 List {
                     Section(header:
                         Text("Nova nota")
                     ) {
-                        TextField("Título", text: $draft.title)
-                            .onChange(of: draft.title) { _, newValue in
-                                saveDraftToUserDefaults()
+                        TextField("Título", text: $draftTitle)
+                            .onChange(of: draftTitle) { oldValue, newValue in
+                                draftManager.saveDraftToFile(title: draftTitle, content: draftContent)
                             }
-                        TextField("Lembrar...", text: $draft.content, axis: .vertical)
-//                            .onChange(of: draft.content) { oldValue, newValue in
-//                            saveDraftToUserDefaults()
-//                                print("=============")
-//                                print("oldValue: \(oldValue)")
-//                                print("newValue: \(newValue)")
-//                                print(draft.content)
-//                        }
+                        TextField("Lembrar...", text: $draftContent, axis: .vertical)
+                            .onChange(of: draftContent) { oldValue, newValue in
+                                draftManager.saveDraftToFile(title: draftTitle, content: draftContent)
+                            }
                         HStack {
                             Spacer()
                             Button(action: {
-                                if draft.isFilled() {
-                                    let newNote = Note(title: draft.title, content: draft.content)
+                                if !draftTitle.isEmpty && !draftContent.isEmpty {
+                                    let newNote = Note(title: draftTitle, content: draftContent)
                                     context.insert(newNote)
-                                    clearDraft()
+                                    draftTitle = ""
+                                    draftContent = ""
+                                    draftManager.clearDraft()
                                     isShowingSheet = false
                                 }
                             }) {
@@ -81,20 +83,65 @@ struct ContentView: View {
             }
         }
     }
+}
+
+class DraftManager {
     
-    private func saveDraftToUserDefaults() {
-        UserDefaults.standard.set(draft.title, forKey: "draftTitle")
-        UserDefaults.standard.set(draft.content, forKey: "draftContent")
+    public static var shared = DraftManager()
+    
+//    public var draft: NoteDraft
+    
+    private var draftFilePath: URL {
+        let fileManager = FileManager.default
+        let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        return documentDirectory.appendingPathComponent("draft_note.json")
     }
     
-    private func loadDraftFromUserDefaults() {
-        draft.title = UserDefaults.standard.string(forKey: "draftTitle") ?? ""
-        draft.content = UserDefaults.standard.string(forKey: "draftContent") ?? ""
+//    private init() {
+//        self.draft = NoteDraft()
+//    }
+    
+    public func saveDraftToFile(title: String, content: String) {
+        let draftData = ["title": title, "content": content]
+        
+        if let data = try? JSONEncoder().encode(draftData) {
+            try? data.write(to: draftFilePath)
+        }
     }
     
-    private func clearDraft() {
-        draft = NoteDraft()
-        UserDefaults.standard.removeObject(forKey: "draftTitle")
-        UserDefaults.standard.removeObject(forKey: "draftContent")
+//    public func loadDraftFromFile() {
+//        guard let data = try? Data(contentsOf: draftFilePath),
+//              let draftData = try? JSONDecoder().decode([String: String].self, from: data) else {
+//            draft = NoteDraft()
+//            return
+//        }
+//        
+//        draft.title = draftData["title"] ?? ""
+//        draft.content = draftData["content"] ?? ""
+//    }
+    
+    public func loadDraftTitle() -> String {
+        guard let data = try? Data(contentsOf: draftFilePath),
+              let draftData = try? JSONDecoder().decode([String: String].self, from: data) else {
+//            draft = NoteDraft()
+            return ""
+        }
+        
+        return draftData["title"] ?? ""
+    }
+    
+    public func loadDraftContent() -> String {
+        guard let data = try? Data(contentsOf: draftFilePath),
+              let draftData = try? JSONDecoder().decode([String: String].self, from: data) else {
+//            draft = NoteDraft()
+            return ""
+        }
+        
+        return draftData["content"] ?? ""
+    }
+    
+    public func clearDraft() {
+//        draft = NoteDraft()
+        try? FileManager.default.removeItem(at: draftFilePath)
     }
 }
